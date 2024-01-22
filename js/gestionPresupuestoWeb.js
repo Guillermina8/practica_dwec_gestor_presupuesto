@@ -67,9 +67,32 @@ function mostrarGastoWeb(idElemento, gasto) {
     btnEditarForm.innerText = "Editar formulario";
     btnEditarForm.addEventListener('click', new EditarHandleFormulario(gasto, divGasto));
     divGasto.append(btnEditarForm);
-    elementoObj.append(divGasto);
+        elementoObj.append(divGasto);
+    //botón borrar gastos de API
+        let btnBorrarApi = document.createElement('button');
+        btnBorrarApi.className = "gasto-borrar-api";
+        btnBorrarApi.innerHTML = "Borrar (API)";
+        btnBorrarApi.type = "button";
+        btnBorrarApi.addEventListener('click', new BorrarApiHandle(gasto))
+        divGasto.append(btnBorrarApi);
+        elementoObj.append(divGasto);
     }
 }
+function BorrarApiHandle(gasto) {
+    this.handleEvent = async (event) => {
+        let usuario = document.getElementById('nombre_usuario').value
+        let resultado = await fetch(Url + usuario + '/' + gasto.gastoId, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json;charset=utf-8' }
+        })
+        if (resultado.ok) {
+            cargarGastosApi()
+            repintar()
+        } else {
+            globalThis.alert('Error HTTP: ' + resultado.status)
+        }
+    }
+ }
 
 function mostrarGastosAgrupadosWeb(idElemento, agrup, periodo) {
     // Obtén el elemento objetivo
@@ -347,21 +370,24 @@ function cargarGastosWeb() {
 let botonCargarGasto = new cargarGastosWeb();
 document.getElementById("cargar-gastos").addEventListener("click", botonCargarGasto);
 
-async function cargarGastosApi() { //! No acabada
-    // manejadora de eventos del evento click del botón cargar-gastos-api
-     this.handleEvent = function () {
-         let usuario = document.getElementById("nombre_usuario").value;
-         let listarGastosApi = fetch(Url + usuario);
-         console.log(usuario);  
+let btnCargarGastosAPI = document.getElementById("cargar-gastos-api");
+btnCargarGastosAPI.addEventListener("click", cargarGastosApi);//! GUILLE: mostrarGastoWeb
+async function cargarGastosApi() { //* Mejorada
+
+    let usuario = document.getElementById("nombre_usuario").value;
+    let urlUsusario = Url + usuario;
+    let peticion = await fetch(urlUsusario);
    
-    if (listarGastosApi.ok) { // Verifica solicitud  exitosa- HTTP: 200-299
-        let json = await listarGastosApi.json()
-        gestorPresu.cargarGastos(json)
+    console.log(usuario);
+    console.log(urlUsusario);
+   
+    if (peticion.ok) { // Verifica solicitud  exitosa- HTTP: 200-299
+        let respuestaJson = await peticion.json();
+        gestorPresu.cargarGastos(respuestaJson)
         repintar()
     } else {
-        globalThis.alert('Error en la solicitud HTTP: ' + listarGastosApi.status)
-        return listarGastosApi.json();
-    }
+        globalThis.alert('Error en la solicitud HTTP: ' + peticion.status)
+        return peticion.json();
     }
 }
 
