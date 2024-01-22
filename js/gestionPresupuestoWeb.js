@@ -1,5 +1,7 @@
 import * as gestorPresu from './gestionPresupuesto.js';
 
+const Url = 'https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/'; //! NO SE SI FUNCIONA!
+
 function mostrarDatoEnId(idElemento, valor) {
     document.getElementById(idElemento).innerText = valor;
 }
@@ -345,6 +347,24 @@ function cargarGastosWeb() {
 let botonCargarGasto = new cargarGastosWeb();
 document.getElementById("cargar-gastos").addEventListener("click", botonCargarGasto);
 
+async function cargarGastosApi() { //! No acabada
+    // manejadora de eventos del evento click del botón cargar-gastos-api
+     this.handleEvent = function () {
+         let usuario = document.getElementById("nombre_usuario").value;
+         let listarGastosApi = fetch(Url + usuario);
+         console.log(usuario);  
+   
+    if (listarGastosApi.ok) { // Verifica solicitud  exitosa- HTTP: 200-299
+        let json = await listarGastosApi.json()
+        gestorPresu.cargarGastos(json)
+        repintar()
+    } else {
+        globalThis.alert('Error en la solicitud HTTP: ' + listarGastosApi.status)
+        return listarGastosApi.json();
+    }
+    }
+}
+
 export {
     mostrarDatoEnId,
     mostrarGastoWeb,
@@ -360,4 +380,5 @@ export {
     filtrarGastosWeb,
     guardarGastosWeb,
     cargarGastosWeb,
+    cargarGastosApi,
 };
