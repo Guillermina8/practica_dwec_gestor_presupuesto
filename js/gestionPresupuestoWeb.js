@@ -371,7 +371,8 @@ let botonCargarGasto = new cargarGastosWeb();
 document.getElementById("cargar-gastos").addEventListener("click", botonCargarGasto);
 
 let btnCargarGastosAPI = document.getElementById("cargar-gastos-api");
-btnCargarGastosAPI.addEventListener("click", cargarGastosApi);//! GUILLE: mostrarGastoWeb
+btnCargarGastosAPI.addEventListener("click", cargarGastosApi);//! GUILLE: Me quedo en Modificación de la función mostrarGastoWeb,pasando la estructura HTML en el punto Manejador de eventos del botón .gasto-enviar-api dentro de nuevoGastoWebFormulario
+//Añade un manejador de eventos necesario para gestionar el evento click del botón.gasto - enviar - api.
 async function cargarGastosApi() { //* Mejorada
 
     let usuario = document.getElementById("nombre_usuario").value;
