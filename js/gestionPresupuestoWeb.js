@@ -76,23 +76,19 @@ function mostrarGastoWeb(idElemento, gasto) {
         btnBorrarApi.addEventListener('click', new BorrarApiHandle(gasto))
         divGasto.append(btnBorrarApi);
         elementoObj.append(divGasto);
+
+        //botón enviar API
+        let btnEnviarAPI = document.createElement("button"); //DUDA SI VA AQUÍ O en FORMULARIO "nuevoGastoWebFormulario"_____ GUI
+        btnEnviarAPI.className = "gasto-enviar-api";
+        btnEnviarAPI.type = "button";
+        btnEnviarAPI.innerHTML = "Enviar (API)";
+        let enviarAPI = new EnviarApiHandle();
+        btnEnviarAPI.addEventListener('click', enviarAPI);
+        divGasto.append(btnEnviarAPI);
+        elementoObj.append(divGasto);
     }
 }
-function BorrarApiHandle(gasto) {
-    this.handleEvent = async (event) => {
-        let usuario = document.getElementById('nombre_usuario').value
-        let resultado = await fetch(Url + usuario + '/' + gasto.gastoId, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json;charset=utf-8' }
-        })
-        if (resultado.ok) {
-            cargarGastosApi()
-            repintar()
-        } else {
-            globalThis.alert('Error HTTP: ' + resultado.status)
-        }
-    }
- }
+
 
 function mostrarGastosAgrupadosWeb(idElemento, agrup, periodo) {
     // Obtén el elemento objetivo
@@ -235,6 +231,7 @@ function nuevoGastoWebFormulario() {
     btnAnyadir.setAttribute("disabled", "true");
     let controles = document.getElementById("controlesprincipales");
     controles.append(plantillaFormulario);
+
 }
 
 let btnAnyadirFormulario = document.getElementById("anyadirgasto-formulario");
@@ -371,7 +368,10 @@ let botonCargarGasto = new cargarGastosWeb();
 document.getElementById("cargar-gastos").addEventListener("click", botonCargarGasto);
 
 let btnCargarGastosAPI = document.getElementById("cargar-gastos-api");
-btnCargarGastosAPI.addEventListener("click", cargarGastosApi);//! GUILLE: Me quedo en Modificación de la función mostrarGastoWeb,pasando la estructura HTML en el punto Manejador de eventos del botón .gasto-enviar-api dentro de nuevoGastoWebFormulario
+btnCargarGastosAPI.addEventListener("click", cargarGastosApi);//! GUILLE: Me quedo en Modificación  .gasto-enviar-apio la estructura HTML en el punto  dentro de nuevoGastoWebFormulario
+
+
+
 //Añade un manejador de eventos necesario para gestionar el evento click del botón.gasto - enviar - api.
 async function cargarGastosApi() { //* Mejorada
 
@@ -391,6 +391,50 @@ async function cargarGastosApi() { //* Mejorada
         return peticion.json();
     }
 }
+function BorrarApiHandle(gasto) {
+    this.handleEvent = async (event) => {
+        let usuario = document.getElementById('nombre_usuario').value
+        let resultado = await fetch(Url + usuario + '/' + gasto.gastoId, {
+            method: 'DELETE'
+        })
+        if (resultado.ok) {
+            cargarGastosApi()
+            repintar()
+        } else {
+            globalThis.alert('Error HTTP: ' + resultado.status)
+        }
+    }
+}
+function EnviarApiHandle() {
+    this.handleEvent = async function (event) {
+
+        let formulario = document.querySelector("form");
+        let descripcionApi = formulario.elements.descripcion.value;
+        let valorApi = formulario.elements.valor.value;
+        let fechaApi = formulario.elements.fecha.value;
+        let etiquetasApi = formulario.elements.etiquetas.value;
+        valorApi = parseFloat(valorApi);
+        fechaApi = +new Date(fechaApi);
+        let arrayEtiquetas = etiquetasApi.split(',');
+        let gastoNuevoApi = {
+            descripcion: descripcionApi,
+            valor: valorApi,
+            fecha: fechaApi,
+            etiquetas: arrayEtiquetas
+        };
+
+        let usuario = document.getElementById("nombre_usuario").value;
+        let url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario;
+        await fetch(url, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(gastoNuevoApi)
+        }).then(cargarGastosApi);
+    }
+}
+//document.querySelector('button.gasto-enviar-api').addEventListener('click', EnviarApiHandle);
 
 export {
     mostrarDatoEnId,
