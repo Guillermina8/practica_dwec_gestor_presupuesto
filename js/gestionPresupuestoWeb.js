@@ -1,6 +1,22 @@
 import * as gestorPresu from './gestionPresupuesto.js';
 
-const Url = 'https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/'; //! NO SE SI FUNCIONA!
+const Url = 'https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/'; 
+
+let btnAnyadirGasto = document.getElementById("anyadirgasto");
+btnAnyadirGasto.addEventListener("click", nuevoGastoWeb); //*Repetido, lo tengo en Estaticos.
+
+let botonCargarGasto = new cargarGastosWeb();
+document.getElementById("cargar-gastos").addEventListener("click", botonCargarGasto);
+let btnAnyadirFormulario = document.getElementById("anyadirgasto-formulario");
+btnAnyadirFormulario.addEventListener("click", nuevoGastoWebFormulario);
+let botonFiltradoFormGasto = new filtrarGastosWeb();
+document.getElementById("formulario-filtrado").addEventListener("submit", botonFiltradoFormGasto);
+let botonGuardarGasto = new guardarGastosWeb();
+document.getElementById("guardar-gastos").addEventListener("click", botonGuardarGasto);
+let btnCargarGastosAPI = document.getElementById("cargar-gastos-api");
+btnCargarGastosAPI.addEventListener("click", cargarGastosApi);//! GUILLE: Me quedo en Modificación  .gasto-enviar-apio la estructura HTML en el punto  dentro de nuevoGastoWebFormulario
+
+//
 
 function mostrarDatoEnId(idElemento, valor) {
     document.getElementById(idElemento).innerText = valor;
@@ -78,12 +94,12 @@ function mostrarGastoWeb(idElemento, gasto) {
         elementoObj.append(divGasto);
 
         //botón enviar API
-        let btnEnviarAPI = document.createElement("button"); //DUDA SI VA AQUÍ O en FORMULARIO "nuevoGastoWebFormulario"_____ GUI
+        let btnEnviarAPI = document.createElement("button"); 
         btnEnviarAPI.className = "gasto-enviar-api";
         btnEnviarAPI.type = "button";
         btnEnviarAPI.innerHTML = "Enviar (API)";
         let enviarAPI = new EnviarApiHandle();
-        btnEnviarAPI.addEventListener('click', enviarAPI);
+        btnEnviarAPI.addEventListener('click', enviarAPI);///
         divGasto.append(btnEnviarAPI);
         elementoObj.append(divGasto);
     }
@@ -178,8 +194,6 @@ function nuevoGastoWeb() {
     repintar();
 }
 
-document.getElementById("anyadirgasto").addEventListener("click", nuevoGastoWeb);
-
 function EditarHandle(gasto) {
     this.gasto = gasto;
     this.handleEvent = function (event) {
@@ -223,19 +237,19 @@ function nuevoGastoWebFormulario() {
     let formulario = plantillaFormulario.querySelector("form");
     //Manejador de evento para el evento submit del formulario.
     formulario.addEventListener("submit", manejadoraEventoFormulario);
+
     let btnCancelar = formulario.querySelector("button.cancelar");
     let btnAnyadir = document.getElementById("anyadirgasto-formulario");
     let cancelarElHandler = new CancelarHandleFormulario(formulario, btnAnyadir); 
+    let btnEnviarApi = document.querySelector('button.gasto-enviar-api');
     
     btnCancelar.addEventListener("click", cancelarElHandler);
     btnAnyadir.setAttribute("disabled", "true");
+    btnEnviarApi.addEventListener('click', EnviarApiHandle);//
+   
     let controles = document.getElementById("controlesprincipales");
-    controles.append(plantillaFormulario);
-
+    controles.append(formulario);
 }
-
-let btnAnyadirFormulario = document.getElementById("anyadirgasto-formulario");
-btnAnyadirFormulario.addEventListener("click", nuevoGastoWebFormulario);
 
 function manejadoraEventoFormulario(event) {
     //Previene el envío del formulario.
@@ -306,8 +320,13 @@ function EditarHandleFormulario(gasto, divGasto) {
         };
         formulario.addEventListener('submit', submitHandler);
         divGasto.append(plantillaFormulario);
+
+        let btnEditarGastoApi = formulario.querySelector("button.gasto-enviar-api"); // falta probar: SubmitEditarHandleFormularioApi
+        btnEditarGastoApi.addEventListener("click", new EditarHandleFormularioApi(gasto, formulario)); //!
+
     }
 }
+
 
 function filtrarGastosWeb() { 
     this.handleEvent = function (event) { 
@@ -339,17 +358,11 @@ function filtrarGastosWeb() {
     }
 }
 
-let botonFiltradoFormGasto = new filtrarGastosWeb();
-document.getElementById("formulario-filtrado").addEventListener("submit", botonFiltradoFormGasto);
-
 function guardarGastosWeb() { 
     this.handleEvent = function () {
         localStorage.GestorGastosDWEC = JSON.stringify(gestorPresu.listarGastos());
     }
 }
-
-let botonGuardarGasto = new guardarGastosWeb();
-document.getElementById("guardar-gastos").addEventListener("click", botonGuardarGasto);
 
 function cargarGastosWeb() {
     this.handleEvent = function () {
@@ -364,33 +377,28 @@ function cargarGastosWeb() {
         repintar();
      }
 }
-let botonCargarGasto = new cargarGastosWeb();
-document.getElementById("cargar-gastos").addEventListener("click", botonCargarGasto);
 
-let btnCargarGastosAPI = document.getElementById("cargar-gastos-api");
-btnCargarGastosAPI.addEventListener("click", cargarGastosApi);//! GUILLE: Me quedo en Modificación  .gasto-enviar-apio la estructura HTML en el punto  dentro de nuevoGastoWebFormulario
-
-
-
+//GET al servidor -- trae lista de gastos del servidor
 //Añade un manejador de eventos necesario para gestionar el evento click del botón.gasto - enviar - api.
 async function cargarGastosApi() { //* Mejorada
 
     let usuario = document.getElementById("nombre_usuario").value;
     let urlUsusario = Url + usuario;
-    let peticion = await fetch(urlUsusario);
+    let respuesta = await fetch(urlUsusario);
    
-    console.log(usuario);
+    console.log("usuario de url: " + usuario);
     console.log(urlUsusario);
    
-    if (peticion.ok) { // Verifica solicitud  exitosa- HTTP: 200-299
-        let respuestaJson = await peticion.json();
-        gestorPresu.cargarGastos(respuestaJson)
+    if (respuesta.ok) { // Verifica solicitud  exitosa- HTTP: 200-299
+        let respuestaJson = await respuesta.json();
+        gestorPresu.cargarGastos(respuestaJson); // Carga los datos del GET(en JSON).
         repintar()
     } else {
-        globalThis.alert('Error en la solicitud HTTP: ' + peticion.status)
-        return peticion.json();
+        globalThis.alert('Error en la solicitud HTTP: ' + respuesta.status)
+        return respuesta.json();
     }
 }
+//DELETE
 function BorrarApiHandle(gasto) {
     this.handleEvent = async (event) => {
         let usuario = document.getElementById('nombre_usuario').value
@@ -405,11 +413,13 @@ function BorrarApiHandle(gasto) {
         }
     }
 }
-function EnviarApiHandle() {
+//POST
+function EnviarApiHandle() {//!............................... GUILLE: ______No funciona, no toma valor de descripción, valor, fecha ni etiquetas _____!!!
     this.handleEvent = async function (event) {
+        let plantillaFormulario = document.getElementById("formulario-template").content.cloneNode(true);
+        let formulario = plantillaFormulario.querySelector("form");
 
-        let formulario = document.querySelector("form");
-        let descripcionApi = formulario.elements.descripcion.value;
+        let descripcionApi = formulario.querySelector("#descripcion").value
         let valorApi = formulario.elements.valor.value;
         let fechaApi = formulario.elements.fecha.value;
         let etiquetasApi = formulario.elements.etiquetas.value;
@@ -424,7 +434,7 @@ function EnviarApiHandle() {
         };
 
         let usuario = document.getElementById("nombre_usuario").value;
-        let url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario;
+        let url = Url + usuario;
         await fetch(url, {
             method: "POST",
             headers: {
@@ -434,7 +444,43 @@ function EnviarApiHandle() {
         }).then(cargarGastosApi);
     }
 }
-//document.querySelector('button.gasto-enviar-api').addEventListener('click', EnviarApiHandle);
+
+//PUT
+function EditarHandleFormularioApi(gasto, formulario) {
+    this.gasto = gasto;
+    this.formulario = formulario;
+
+    this.handleEvent = async function () {
+        let formulario = this.formulario;
+
+        let descripcion = formulario.elements.descripcion.value;
+        let valor = Number(formulario.elements.valor.value);
+        let fecha = formulario.elements.fecha.value;
+        let etiquetas = formulario.elements.etiquetas.value;
+        etiquetas = etiquetas.split(",");
+
+        this.gasto.actualizarDescripcion(descripcion);
+        this.gasto.actualizarValor(valor);
+        this.gasto.actualizarFecha(fecha);
+        this.gasto.anyadirEtiquetas(...etiquetas);
+
+        let usuario = document.getElementById("nombre_usuario").value;
+        let url = Url + usuario + '/' + gasto.gastoId;
+        await fetch( url, {
+            method: "PUT",
+            headers: {
+                "Content-Type": 'application/json;charset=utf-8',
+            },
+            body: JSON.stringify(this.gasto)
+        }).then(
+            response => {
+                if (response.ok) cargarGastosApi();
+            }
+        ).catch(
+            reason => alert(`Se ha producido un Error: ${reason}`)
+        );
+    };
+}
 
 export {
     mostrarDatoEnId,
